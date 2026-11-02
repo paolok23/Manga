@@ -1,14 +1,14 @@
     {
     "builds": [
         {
-        "src": "lector_mangas/wsgi.py",
+        "src": "core/wsgi.py",
         "use": "@vercel/python"
         }
     ],
     "routes": [
         {
         "src": "/(.*)",
-        "dest": "lector_mangas/wsgi.py"
+        "dest": "core/wsgi.py"
         }
     ],
     "buildCommand": "python manage.py migrate"
