@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ manga.titulo }} - Paolo Manga</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(rgba(15, 15, 17, 0.70), rgba(15, 15, 17, 0.85)) {% if manga.fondo %}, url('{{ manga.fondo.url }}') no-repeat center center fixed{% endif %};
+            background-size: cover; 
+            color: #fff; 
+            margin: 0; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin-left: auto; 
+            margin-right: auto; 
+        }
+
+        .volver { 
+            color: #ff4757; 
+            text-decoration: none; 
+            display: inline-block; 
+            margin-bottom: 20px; 
+            font-weight: 600;
+        }
+        .volver:hover {
+            text-decoration: underline;
+        }
+
+        /* RECUADRO CON VIDRIO TRANSLÚCIDO QUE SE FUSIONA CON EL FONDO */
+        .manga-header { 
+            display: flex; 
+            gap: 20px; 
+            background: rgba(15, 15, 17, 0.65); /* Muy translúcido para dejar pasar el color del fondo */
+            backdrop-filter: blur(12px); /* Difumina la imagen de atrás creando un tono armónico */
+            -webkit-backdrop-filter: blur(12px);
+            padding: 20px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Borde fino sutil */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            align-items: center; 
+        }
+        .manga-header img { 
+            width: 150px; 
+            height: 220px; 
+            object-fit: cover; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+        .manga-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 1.6rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+        }
+        .manga-header p {
+            color: #e0e0e0;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .capitulos-lista { 
+            margin-top: 35px; 
+        }
+        .capitulos-lista h2 {
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-left: 3px solid #ff4757;
+            padding-left: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* TARJETAS DE CAPÍTULOS CON EL MISMO ESTILO DE CRISTAL */
+        .capitulo-item { 
+            background: rgba(15, 15, 17, 0.65); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px; 
+            margin-bottom: 10px;
+            border-radius: 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .capitulo-item:hover {
+            border-color: #ff4757;
+            background: rgba(25, 25, 30, 0.75);
+        }
+        
+        .capitulo-item a { 
+            background: #ff4757; 
+            color: white; 
+            padding: 6px 14px; 
+            border-radius: 4px; 
+            text-decoration: none; 
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .capitulo-item a:hover { 
+            background: #ff6b81; 
+        }
+    </style>
+</head>
+<body>
+
+    <a href="{% url 'lista_mangas' %}" class="volver">← Volver al inicio</a>
+
+    <div class="manga-header">
+        {% if manga.portada %}
+            <img src="{{ manga.portada.url }}" alt="{{ manga.titulo }}">
+        {% endif %}
+        <div>
+            <h1>{{ manga.titulo }}</h1>
+            <p>{{ manga.descripcion|default:"Disfruta de este manga en tu plataforma personal con música integrada." }}</p>
+        </div>
+    </div>
+
+    <div class="capitulos-lista">
+        <h2>Capítulos</h2>
+        {% for capitulo in capitulos %}
+            <div class="capitulo-item">
+                <span>Capítulo {{ capitulo.numero_capitulo }} {% if capitulo.titulo_capitulo %}- {{ capitulo.titulo_capitulo }}{% endif %}</span>
+                <a href="{% url 'leer_capitulo' capitulo.id %}">Leer 📖</a>
+            </div>
+        {% empty %}
+            <p style="color: #bbb; font-style: italic;">Este manga aún no tiene capítulos cargados.</p>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

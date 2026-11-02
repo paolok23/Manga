@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ capitulo.manga.titulo }} - Cap {{ capitulo.numero_capitulo }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            /* Fondo dinámico heredado del manga al que pertenece el capítulo */
+            background: linear-gradient(rgba(15, 15, 17, 0.90), rgba(15, 15, 17, 0.94)) {% if capitulo.manga.fondo %}, url('{{ capitulo.manga.fondo.url }}') no-repeat center center fixed{% endif %};
+            background-size: cover; 
+            color: #f1f1f1; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        .barra-superior { 
+            background: #16161a; 
+            padding: 15px 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #222;
+        }
+        .barra-superior a { 
+            color: #ff4757; 
+            text-decoration: none; 
+            font-weight: bold; 
+        }
+
+        /* Contenedor del lector vertical */
+        .lector-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 0px; 
+            padding: 30px 0; 
+        }
+        .lector-container img { 
+            max-width: 800px; 
+            width: 100%; 
+            height: auto; 
+            display: block; 
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Reproductor de música flotante */
+        .reproductor-flotante {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(22, 22, 26, 0.95);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            z-index: 2000;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+            border: 1px solid #2a2a30;
+        }
+        .reproductor-flotante button { 
+            background: #ff4757; 
+            color: white; 
+            border: none; 
+            padding: 6px 12px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold;
+        }
+        .reproductor-flotante button:hover { 
+            background: #ff6b81; 
+        }
+        .reproductor-flotante input[type="range"] { 
+            accent-color: #ff4757; 
+            width: 80px; 
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="barra-superior">
+        <a href="{% url 'detalle_manga' capitulo.manga.id %}">← Volver al Manga</a>
+        <span style="font-weight: 600;">{{ capitulo.manga.titulo }} - Cap. {{ capitulo.numero_capitulo }}</span>
+    </div>
+
+    <!-- VISOR DE PÁGINAS (SCROLL VERTICAL) -->
+    <div class="lector-container">
+        {% for pagina in paginas %}
+            <img src="{{ pagina.imagen.url }}" alt="Página {{ pagina.numero_pagina }}" loading="lazy">
+        {% empty %}
+            <p style="margin-top: 50px; color: #888;">No hay páginas cargadas en este capítulo.</p>
+        {% endfor %}
+    </div>
+
+    <!-- REPRODUCTOR DE MÚSICA EN BUCLE CON CONTROL DE VOLUMEN -->
+    {% if capitulo.musica_fondo %}
+    <div class="reproductor-flotante">
+        <audio id="musicaCapitulo" autoplay loop>
+            <source src="{{ capitulo.musica_fondo.url }}" type="audio/mpeg">
+        </audio>
+        <span>🎵 Música</span>
+        <button id="btnPlayPause" onclick="toggleAudio()">Pausar</button>
+        <!-- Deslizador de volumen -->
+        <input type="range" id="volumenSlider" min="0" max="1" step="0.05" value="1" oninput="cambiarVolumen(this.value)" title="Volumen">
+    </div>
+    {% endif %}
+
+    <!-- Script para controlar el audio, volumen y detenerlo al final -->
+    <script>
+        const audio = document.getElementById("musicaCapitulo");
+        
+        function toggleAudio() {
+            const btn = document.getElementById("btnPlayPause");
+            if (audio.paused) {
+                audio.play();
+                btn.innerText = "Pausar";
+            } else {
+                audio.pause();
+                btn.innerText = "Reproducir";
+            }
+        }
+
+        function cambiarVolumen(valor) {
+            if (audio) {
+                audio.volume = valor;
+            }
+        }
+
+        // Detener automáticamente al llegar a la última página
+        document.addEventListener("DOMContentLoaded", function () {
+            if (!audio) return;
+            const imagenes = document.querySelectorAll(".lector-container img");
+            if (imagenes.length === 0) return;
+
+            const ultimaPagina = imagenes[imagenes.length - 1];
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        const btn = document.getElementById("btnPlayPause");
+                        if (btn) btn.innerText = "Reproducir";
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            observer.observe(ultimaPagina);
+        });
+    </script>
+</body>
+</html>
