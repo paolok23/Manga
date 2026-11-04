@@ -1,4 +1,7 @@
+import os
 import re
+from django.contrib import messages
+from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Capitulo, Manga, Pagina
 
@@ -34,6 +37,12 @@ def leer_capitulo(request, capitulo_id):
   )
 
 
+# ==========================================
+# CAMBIOS DE SEGURIDAD:
+# ==========================================
+VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
+
+@user_passes_test(lambda u: u.is_staff)  # Restringe el acceso exclusivamente a administradores
 def subida_masiva_paginas(request, capitulo_id):
   capitulo = get_object_or_404(Capitulo, id=capitulo_id)
 
@@ -41,6 +50,13 @@ def subida_masiva_paginas(request, capitulo_id):
     imagenes = request.FILES.getlist('imagenes')
 
     if imagenes:
+      # Validar extensión de cada archivo por seguridad
+      for imagen in imagenes:
+        ext = os.path.splitext(imagen.name)[1].lower()
+        if ext not in VALID_EXTENSIONS:
+          messages.error(request, f"Archivo bloqueado: formato '{ext}' no permitido.")
+          return redirect('subida_masiva', capitulo_id=capitulo.id)
+
       # Ordenamos usando la función de orden natural por número de archivo
       imagenes_ordenadas = sorted(
           imagenes, key=lambda f: natural_sort_key(f.name)
